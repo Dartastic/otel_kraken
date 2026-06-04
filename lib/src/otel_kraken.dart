@@ -2,7 +2,6 @@
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
 import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_kraken_suppression.dart';
 
@@ -52,48 +51,60 @@ Future<T> tracedKraken<T>({
   final t = tracer ?? OTel.tracerProvider().getTracer('otel_kraken');
   final span = t.startSpan('kraken $operation', kind: SpanKind.client);
   try {
-    span.setStringAttribute('rpc.system', 'kraken');
+    span.addAttributes(
+        OTel.attributes([OTel.attributeString('rpc.system', 'kraken')]));
     final r = await invoke();
     final res = r.result;
     if (res != null) {
       if (res.pair != null) {
-        span.setStringAttribute('kraken.pair', res.pair!);
+        span.addAttributes(
+            OTel.attributes([OTel.attributeString('kraken.pair', res.pair!)]));
       }
       if (res.side != null) {
-        span.setStringAttribute('kraken.side', res.side!);
+        span.addAttributes(
+            OTel.attributes([OTel.attributeString('kraken.side', res.side!)]));
       }
       if (res.orderType != null) {
-        span.setStringAttribute('kraken.order.type', res.orderType!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('kraken.order.type', res.orderType!)]));
       }
       if (res.orderId != null) {
-        span.setStringAttribute('kraken.order.id', res.orderId!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('kraken.order.id', res.orderId!)]));
       }
       if (res.amount != null) {
-        span.setDoubleAttribute('kraken.amount', res.amount!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeDouble('kraken.amount', res.amount!)]));
       }
       if (res.price != null) {
-        span.setDoubleAttribute('kraken.price', res.price!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeDouble('kraken.price', res.price!)]));
       }
       if (res.fee != null) {
-        span.setDoubleAttribute('kraken.fee', res.fee!);
+        span.addAttributes(
+            OTel.attributes([OTel.attributeDouble('kraken.fee', res.fee!)]));
       }
       if (res.status != null) {
-        span.setStringAttribute('kraken.status', res.status!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('kraken.status', res.status!)]));
       }
       if (res.statusCode != null) {
-        span.setIntAttribute('http.response.status_code', res.statusCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeInt('http.response.status_code', res.statusCode!)]));
       }
       if (res.errorCode != null) {
-        span.setStringAttribute('kraken.error.code', res.errorCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('kraken.error.code', res.errorCode!)]));
       }
-      final fail =
-          res.errorCode != null ||
+      final fail = res.errorCode != null ||
           (res.statusCode != null && res.statusCode! >= 400);
       if (fail) {
-        span.setStringAttribute(
-          ErrorResource.errorType.key,
-          res.errorCode ?? 'kraken.error',
-        );
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString(
+            ErrorResource.errorType.key,
+            res.errorCode ?? 'kraken.error',
+          )
+        ]));
         span.setStatus(SpanStatusCode.Error, res.errorMessage);
       }
     }
